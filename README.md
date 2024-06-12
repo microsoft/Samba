@@ -34,7 +34,7 @@ We report 5-shot accuracy for MMLU, 8-shot CoT accruacy for GSM8K, 0-shot pass@1
 
 
 ## Code Overview
-Our training infrastructure on SlimPajama is a modified version of [TinyLlama](https://github.com/jzhang38/TinyLlama). One can easily specify different architectual configurations through modifying the [`model_name`](pretrain.py#L27) and the [`config file`](lit_gpt/config.py).
+Our training infrastructure on SlimPajama is a modified version of [TinyLlama](https://github.com/jzhang38/TinyLlama). One can easily specify different architectual configurations through modifying the [`model_name`](pretrain.py#L27) and the [`config file`](lit_gpt/config.py) which includes tons of baseline architectures mentioned in the paper.
 
 
 ## Pretraining Samba from scratch
