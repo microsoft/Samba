@@ -4,7 +4,7 @@
 </div>
 
 
-<h1 align="left"> Samba</h1>
+<h1 align="left"> Samba: Simple Hybrid State Space Models for Efficient Unlimited Context Language Modeling</h1>
 
 [![arXiv](https://img.shields.io/badge/Paper-2406.07522-blue.svg?style=flat-square)](https://arxiv.org/abs/2406.07522)
 
@@ -13,7 +13,7 @@ Samba is a simple yet powerful hybrid model with an **unlimited** context length
 
 Samba = Mamba + MLP + Sliding Window Attention + MLP stacking at the layer level.
 
-Our largest base model, `Samba-3.8B`, is trained on 3.2 trillion tokens from the Phi3 dataset, outperforming `Phi3-mini` on major benchmarks (e.g. MMLU, GSM8K and HumanEval) by a large margin. Samba can also achieve perfect **long-context** retrieval ability with minimal instruction tuning, while still maintaining its **linear complexity** with respect to sequence length. This ability leads to the impressive performance of `Samba-3.8B-instruct` on downstream tasks such as long-context summarization. 
+Our largest model, `Samba-3.8B`, is trained on 3.2 trillion tokens from the Phi3 dataset, outperforming `Phi3-mini` on major benchmarks (e.g. MMLU, GSM8K and HumanEval) by a large margin. Samba can also achieve perfect **long-context** retrieval ability with minimal instruction tuning, while still maintaining its **linear complexity** with respect to sequence length. This ability leads to the impressive performance of `Samba-3.8B-instruct` on downstream tasks such as long-context summarization. 
 
 
 ## Performance :rocket:

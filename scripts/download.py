@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 # Copyright Lightning AI. Licensed under the Apache License 2.0, see LICENSE file.
 
 import os

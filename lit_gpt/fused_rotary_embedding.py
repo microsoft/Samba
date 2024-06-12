@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 # Copyright (c) 2023, Tri Dao.
 
 import math
