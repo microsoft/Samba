@@ -28,7 +28,7 @@ Our largest model, `Samba-3.8B`, is trained on 3.2 trillion tokens from the Phi3
 | Phi-3-mini-4K-instruct   | 68.8 | 82.5  | 58.5      | 14.4      | 21.6     |
 | Samba-3.8B-instruct (preview)       | **71.9** | **87.6** | **62.8**      | **18.9**      | 21.2     |
 
-We report 5-shot accuracy for MMLU, 8-shot CoT accruacy for GSM8K, 0-shot pass@1 for HumanEval and ROUGE-L for both GovReport and SQuALITY.
+We report 5-shot accuracy for MMLU, 8-shot CoT accuracy for GSM8K, 0-shot pass@1 for HumanEval and ROUGE-L for both GovReport and SQuALITY.
 ## Updates
 - [June 11] Released the codebase for training Samba-421M and Samba-1.3B on SlimPajama. 
 
