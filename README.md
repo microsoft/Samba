@@ -34,7 +34,7 @@ We report 5-shot accuracy for MMLU, 8-shot CoT accruacy for GSM8K, 0-shot pass@1
 
 
 ## Code Overview
-Our training infrastructure on SlimPajama is a modified version of [TinyLlama](https://github.com/jzhang38/TinyLlama). One can easily specify different architectual configurations through modifying the [`model_name`](pretrain.py#L30) and the [`config file`](lit_gpt/config.py) which includes tons of baseline architectures mentioned in the paper. Our RetNet and GLA implementations are from the awesome [Flash Linear Attention](https://github.com/sustcsonglin/flash-linear-attention) repository.
+Our training infrastructure on SlimPajama is a modified version of [TinyLlama](https://github.com/jzhang38/TinyLlama) and [LitGPT](https://github.com/Lightning-AI/litgpt). One can easily specify different architectual configurations through modifying the [`model_name`](pretrain.py#L30) and the [`config file`](lit_gpt/config.py) which includes tons of baseline architectures mentioned in the paper. Our RetNet and GLA implementations are from the awesome [Flash Linear Attention](https://github.com/sustcsonglin/flash-linear-attention) repository.
 
 
 ## Pretraining Samba from scratch
