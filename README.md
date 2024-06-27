@@ -60,7 +60,7 @@ The following script trains a default Samba-421M model on a single node of 8 GPU
 ```bash
 torchrun --nnodes=1 --nproc_per_node=8 --rdzv_id=samba-421M --rdzv_backend=c10d  --rdzv_endpoint=${MASTER_ADDR}:${MASTER_PORT} pretrain.py --train_data_dir data/slim --val_data_dir data/slim 
 ```
-You can modify [`model_name`](pretrain.py#L30) to "Samba_1.3B" and [`train_config`](pretrain.py#L31) to "tsz512x4k_100B" for training a Samba-1.3B model with 100B tokens. We assume that you have 8 nodes each with 8 GPUs, and you can modify the number of [`nodes`](pretrain.py#L44) for training on fewer gpus.
+You can modify [`model_name`](pretrain.py#L33) to "Samba_1.3B" and [`train_config`](pretrain.py#L34) to "tsz512x4k_100B" for training a Samba-1.3B model with 100B tokens. We assume that you have 8 nodes each with 8 GPUs, and you can modify the number of [`nodes`](pretrain.py#L43) for training on fewer gpus.
 
 
 
