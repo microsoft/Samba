@@ -1,3 +1,4 @@
+pip>=23.0
 azureml-mlflow
 tensorboard
 xformers --index-url https://download.pytorch.org/whl/cu121
@@ -15,7 +16,6 @@ zstandard
 pandas
 pyarrow
 huggingface_hub
-flash-attn --no-build-isolation
 causal-conv1d
 mamba-ssm
 einops
