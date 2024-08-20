@@ -1,0 +1,5 @@
+torch
+lightning
+pytorch-lightning
+wandb
+jsonargparse
