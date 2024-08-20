@@ -13,3 +13,6 @@ checkpoints
 out
 wandb
 amlt
+
+# Ignore ENV files
+\venv
