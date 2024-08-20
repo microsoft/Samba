@@ -1,5 +1,24 @@
-torch
-lightning
-pytorch-lightning
+azureml-mlflow
+tensorboard
+xformers --index-url https://download.pytorch.org/whl/cu121
+packaging
+torch>=2.1.0.dev
+lightning==2.1.2
+lightning[app]
+jsonargparse[signatures]
+tokenizers
+sentencepiece
 wandb
-jsonargparse
+lightning[data]
+torchmetrics
+zstandard
+pandas
+pyarrow
+huggingface_hub
+flash-attn --no-build-isolation
+causal-conv1d
+mamba-ssm
+einops
+opt_einsum
+git+https://github.com/sustcsonglin/flash-linear-attention@98c176e
+triton-nightly --index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/Triton-Nightly/pypi/simple/
