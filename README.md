@@ -25,11 +25,12 @@ Our largest model, `Samba-3.8B`, is trained on 3.2 trillion tokens from the Phi3
 
 | Model                         | MMLU | GSM8K | HumanEval | GovReport | SQuALITY |
 |-------------------------------|------|-------|-----------|-----------|----------|
-| Phi-3-mini-4K-instruct   | 68.8 | 82.5  | 58.5      | 14.4      | 21.6     |
+| Phi-3-mini-4K-instruct   | 68.8 | 82.5  | 58.5      | 14.4      | **21.6**     |
 | Samba-3.8B-instruct (preview)       | **71.9** | **87.6** | **62.8**      | **18.9**      | 21.2     |
 
 We report 5-shot accuracy for MMLU, 8-shot CoT accuracy for GSM8K, 0-shot pass@1 for HumanEval and ROUGE-L for both GovReport and SQuALITY.
 ## Updates
+- [Dec. 8] Added the evaluation script and more baseline architectures.
 - [June 11] Released the codebase for training Samba-421M and Samba-1.3B on SlimPajama. 
 
 
@@ -61,6 +62,17 @@ The following script trains a default Samba-421M model on a single node of 8 GPU
 torchrun --nnodes=1 --nproc_per_node=8 --rdzv_id=samba-421M --rdzv_backend=c10d  --rdzv_endpoint=${MASTER_ADDR}:${MASTER_PORT} pretrain.py --train_data_dir data/slim --val_data_dir data/slim 
 ```
 You can modify [`model_name`](pretrain.py#L33) to "Samba_1.3B" and [`train_config`](pretrain.py#L34) to "tsz512x4k_100B" for training a Samba-1.3B model with 100B tokens. We assume that you have 8 nodes each with 8 GPUs, and you can modify the number of [`nodes`](pretrain.py#L43) for training on fewer gpus.
+
+### Evaluation
+
+We leverage [lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness) for the evaluation of our pretrained models. We only support non-generation based tasks for now.
+```bash
+pip install lm-eval
+python eval.py --model Samba \
+          --model_args pretrained=path/to/ckpt.pth,config="Samba_1.3B" \
+          --tasks lambada_openai,arc_easy,winogrande,hellaswag,piqa --device cuda:0 --batch_size 1 --trust_remote_code \
+```
+
 
 
 
