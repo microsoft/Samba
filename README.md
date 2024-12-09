@@ -70,7 +70,7 @@ We leverage [lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-
 pip install lm-eval
 python eval.py --model Samba \
           --model_args pretrained=path/to/ckpt.pth,config="Samba_1.3B" \
-          --tasks lambada_openai,arc_easy,winogrande,hellaswag,piqa --device cuda:0 --batch_size 1 --trust_remote_code \
+          --tasks lambada_openai,arc_easy,winogrande,hellaswag,piqa --device cuda:0 --batch_size 1 --trust_remote_code 
 ```
 
 
