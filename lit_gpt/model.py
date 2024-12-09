@@ -6,6 +6,7 @@
 
 import math
 from typing import Any, List, Optional, Tuple
+import numpy as np
 
 import torch
 import torch.nn as nn
@@ -28,7 +29,12 @@ import torch.nn.functional as F
 
 from causal_conv1d import causal_conv1d_fn
 
+from .mega import S6GatedAttention
 
+import copy
+from collections import namedtuple
+CausalLMOutput = namedtuple("CausalLMOutput", ["logits"])
+        
 RoPECache = Tuple[torch.Tensor, torch.Tensor]
 KVCache = Tuple[torch.Tensor, torch.Tensor]
 FlashAttention2Available = RequirementCache("flash-attn>=2.0.0.post1")
@@ -132,10 +138,21 @@ class GPT(nn.Module):
                     torch.nn.init.zeros_(module.bias)
         # GPT-NeoX       
         for name, p in module.named_parameters():
-            if name in ["out_proj.weight", "fc2.weight"] or (name == "proj.weight" and isinstance(module, LLaMAMLP)) or (name == "w3.weight" and isinstance(module, SwiGLU) or (name=="proj.weight" and isinstance(module, CausalSelfAttention))):  #if use xformer swiglu, fc2 layer will be renamed to w3             
+            if (name == "out_proj.weight" and isinstance(module, Mamba)) \
+                or (name == "o_proj.weight") \
+                    or (name == "proj.weight" and isinstance(module, LLaMAMLP)) \
+                    or (name == "w3.weight" and isinstance(module, SwiGLU)) \
+                    or (name=="proj.weight" and isinstance(module, CausalSelfAttention)):       
+                    #if use xformer swiglu, fc2 layer will be renamed to w3       
+                    # sclae fc2 is better than fc3 for moe, it is wierd
                 if self.mamba_init:
-                    n_residuals_per_layer = 1 if self.config.mamba or not self.config.mlp else 2
-                    nn.init.kaiming_uniform_(p, a=math.sqrt(5))
+                    if self.config.mamba or not self.config.mlp:
+                        n_residuals_per_layer = 1  
+                    elif self.config.mamba_swa_mlp:
+                        n_residuals_per_layer = 3
+                    else:
+                        n_residuals_per_layer = 2
+                    #nn.init.kaiming_uniform_(p, a=math.sqrt(5))
                     with torch.no_grad():
                         p /= math.sqrt(n_residuals_per_layer * n_layer)
                 else:
@@ -179,7 +196,8 @@ class GPT(nn.Module):
                     prenorm=False,
                     residual_in_fp32=self.config.residual_in_fp32,
                 )
-            return self.lm_head(hidden_states) 
+            lm_logits = self.lm_head(hidden_states)
+            return CausalLMOutput(logits=lm_logits)
 
         B, T = idx.size()
         use_kv_cache = input_pos is not None
@@ -235,9 +253,10 @@ class GPT(nn.Module):
                 self.kv_caches = self.kv_caches or self.build_kv_caches(x, max_seq_length, cos.size(-1) * 2)
             for i, block in enumerate(self.transformer.h):
                 x, self.kv_caches[i] = block(x, rope, max_seq_length, mask, input_pos, self.kv_caches[i])
-
-        x = self.transformer.ln_f(x)
-        return self.lm_head(x)  # (b, t, vocab_size)
+        x = self.transformer.ln_f(x.to(dtype=self.transformer.ln_f.weight.dtype))
+        lm_logits = self.lm_head(x)
+        return CausalLMOutput(logits=lm_logits)
+        # return self.lm_head(x)  # (b, t, vocab_size)
 
     @classmethod
     def from_name(cls, name: str, **kwargs: Any) -> Self:
@@ -284,23 +303,42 @@ class GPT(nn.Module):
 class Block(nn.Module):
     def __init__(self, config: Config, layer_idx: int) -> None:
         super().__init__()
-        self.norm_1 = config.norm_class(config.n_embd, eps=config.norm_eps)
-        if config.attn_layer_pos is not None:
-            self.use_mamba = layer_idx not in eval(config.attn_layer_pos) 
-        else:
-            self.use_mamba = layer_idx % config.mb_per_layer == 0 if config.mb_per_layer >0 else False
-        self.use_retnet = layer_idx % config.ret_per_layer == 0 if config.ret_per_layer >0 else False   
-        self.use_gla = layer_idx % config.gla_per_layer == 0 if config.gla_per_layer >0 else False              
-        if self.use_mamba:
-            factory_kwargs = {"device": "cuda", "dtype": torch.float32}
-            self.attn = Mamba(config.n_embd, layer_idx=layer_idx, **factory_kwargs)
-        elif self.use_retnet:
-            self.attn = MultiScaleRetention(hidden_size=config.n_embd, num_heads=config.n_head // 2, expand_k=1, expand_v = 2, mode = 'fused_chunk', use_short_conv = False)
-        elif self.use_gla:
-            self.attn = GatedLinearAttention(hidden_size=config.n_embd, num_heads=config.n_embd // 384, expand_k = 0.5, expand_v = 1, mode = 'fused_chunk', use_short_conv = False)        
-        else:
+        self.layer_idx = layer_idx
+        self.abl_mamba = config.abl_mamba
+        self.mamba_swa_mlp = config.mamba_swa_mlp
+        factory_kwargs = {"device": "cuda", "dtype": torch.float32}
+        if config.mamba_swa_mlp:
+            self.norm_m = config.norm_class(config.n_embd, eps=config.norm_eps)
+            self.norm_attn = config.norm_class(config.n_embd, eps=config.norm_eps)            
+            self.mb = Mamba(config.n_embd, layer_idx=layer_idx, **factory_kwargs)
             self.attn = CausalSelfAttention(config, n_embd= config.n_embd, layer_idx= layer_idx, )
+        elif config.use_mega:
+            self.attn = S6GatedAttention(config.n_embd)
+        else:
+            self.norm_1 = config.norm_class(config.n_embd, eps=config.norm_eps)
+            self.use_retnet, self.use_gla = False, False
+            if config.attn_layer_pos is not None:
+                self.use_mamba = layer_idx not in eval(config.attn_layer_pos) 
+            else:
+                self.use_mamba = layer_idx % config.mb_per_layer == 0 if config.mb_per_layer >0 else False
+                self.use_retnet = layer_idx % config.ret_per_layer == 0 if config.ret_per_layer >0 else False   
+                self.use_gla = layer_idx % config.gla_per_layer == 0 if config.gla_per_layer >0 else False       
+            if self.use_mamba:
+                if self.abl_mamba:
+                    config_temp = copy.deepcopy(config)
+                    config_temp._mlp_class = "LLaMAMLP"
+                    config_temp.intermediate_size = config_temp.n_embd * 2
+                    self.attn = config.mlp_class(config_temp,)
+                else:
+                    self.attn = Mamba(config.n_embd, layer_idx=layer_idx, **factory_kwargs)
+            elif self.use_retnet:
+                self.attn = MultiScaleRetention(hidden_size=config.n_embd, num_heads=config.n_head // 2, expand_k=1, expand_v = 2, mode = 'fused_chunk', use_short_conv = False)
+            elif self.use_gla:
+                self.attn = GatedLinearAttention(hidden_size=config.n_embd, num_heads=config.n_embd // 384, expand_k = 0.5, expand_v = 1, mode = 'fused_chunk', use_short_conv = False)        
+            else:
+                self.attn = CausalSelfAttention(config, n_embd= config.n_embd, layer_idx= layer_idx, )
             
+        # mlp
         if not config.shared_attention_norm and config.mlp and not config.parallel_residual:
             self.norm_2 = config.norm_class(config.n_embd, eps=config.norm_eps)
         if config.mlp:
@@ -316,28 +354,36 @@ class Block(nn.Module):
         input_pos: Optional[torch.Tensor] = None,
         kv_cache: Optional[KVCache] = None,
     ) -> Tuple[torch.Tensor, Optional[KVCache]]:
-
-        n_1 = self.norm_1(x)
-    
-        if self.use_mamba:
-            h  = self.attn(n_1, inference_params=kv_cache)
+        if self.mamba_swa_mlp:
+            x = self.mb(self.norm_m(x.to(dtype=self.norm_m.weight.dtype)), inference_params=kv_cache) + x.to(torch.float32)
             new_kv_cache = kv_cache # TODO 
-            x = x.to(torch.float32)
-        elif self.use_retnet or self.use_gla:
-            h, _ , new_kv_cache = self.attn(n_1)
+            h, new_kv_cache = self.attn(self.norm_attn(x.to(dtype=self.norm_attn.weight.dtype)),  rope, max_seq_length, mask, input_pos, kv_cache) 
+            x = h+x
         else:
-            h, new_kv_cache = self.attn(n_1, rope, max_seq_length, mask, input_pos, kv_cache)   
-        if self.config.parallel_residual:
-            assert self.config.shared_attention_norm
-            if self.config.mlp:
-                h = h + self.mlp(n_1)
-            x = x + h
-        else:
-            x = x + h
-            if self.config.mlp:
-                n_2 = self.norm_2(x)
-                h = self.mlp(n_2)
-                x = x + h
+            ox = x
+            if self.config.use_mega:
+                x = self.attn(x)
+                new_kv_cache = None
+            else:  
+                n_1 = self.norm_1(x.to(dtype=self.norm_1.weight.dtype))
+                if self.use_mamba:
+                    if self.abl_mamba:
+                        h  = self.attn(n_1)
+                    else:
+                        h  = self.attn(n_1, inference_params=kv_cache)
+                    new_kv_cache = kv_cache # TODO 
+                    ox = ox.to(torch.float32)
+                elif self.use_retnet or self.use_gla:
+                    h, _ , new_kv_cache = self.attn(n_1)
+                else:
+                    h, new_kv_cache = self.attn(n_1, rope, max_seq_length, mask, input_pos, kv_cache)   
+                x = ox + h
+            
+        if self.config.mlp:
+            ox = x
+            n_2 = self.norm_2(x.to(dtype=self.norm_2.weight.dtype))
+            h = self.mlp(n_2)
+            x = ox + h
         return x, new_kv_cache
 
 
