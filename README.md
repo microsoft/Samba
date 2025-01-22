@@ -30,6 +30,7 @@ Our largest model, `Samba-3.8B`, is trained on 3.2 trillion tokens from the Phi3
 
 We report 5-shot accuracy for MMLU, 8-shot CoT accuracy for GSM8K, 0-shot pass@1 for HumanEval and ROUGE-L for both GovReport and SQuALITY.
 ## Updates
+- [Jan. 22] Samba has been accepted to ICLR 2025!
 - [Dec. 8] Added the evaluation script and more baseline architectures.
 - [June 11] Released the codebase for training Samba-421M and Samba-1.3B on SlimPajama. 
 
