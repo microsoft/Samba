@@ -238,7 +238,7 @@ def train(fabric, state, train_dataloader, val_dataloader, monitor, resume):
         targets = train_data[:, 1 : model.config.block_size + 1].contiguous()
         is_accumulating = (state["iter_num"] + 1) % gradient_accumulation_steps != 0
         with fabric.no_backward_sync(model, enabled=is_accumulating):
-            logits = model(input_ids)
+            logits = model(input_ids).logits
             loss = loss_func(logits, targets)
             # loss = chunked_cross_entropy(logits, targets, chunk_size=0)
             fabric.backward(loss / gradient_accumulation_steps)
@@ -303,7 +303,7 @@ def validate(fabric: L.Fabric, model: torch.nn.Module, val_dataloader: DataLoade
         for i, length in enumerate([4096, 8192, 12288, 16384]):   #[2048, 4096, 8192, 16384]
             input_ids = val_data[:, 0 : length].contiguous()
             targets = val_data[:, 1 : length + 1].contiguous()
-            logits = model(input_ids)
+            logits = model(input_ids).logits
             loss = chunked_cross_entropy(logits, targets, chunk_size=0)
             losses[k,i] = loss.item()
         
