@@ -474,7 +474,6 @@ Samba = [
         rotary_percentage=1.0,
         parallel_residual=False,
         bias=False,
-        compress = False,
         nope = True,
         _norm_class="FusedRMSNorm",
         norm_eps=1e-5,
