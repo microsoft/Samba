@@ -1,0 +1,146 @@
+[tool.poetry]
+name = "samba-model"
+version = "0.1.0"
+description = "Samba: Simple Hybrid State Space Models for Efficient Unlimited Context Language Modeling"
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [{include = "lit_gpt"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+torch = ">=2.1.0"
+lightning = "2.1.2"
+jsonargparse = {extras = ["signatures"], version = "*"}
+tokenizers = "*"
+sentencepiece = "*"
+wandb = "*"
+torchmetrics = "*"
+tensorboard = "*"
+zstandard = "*"
+pandas = "*"
+pyarrow = "*"
+huggingface_hub = "*"
+einops = "*"
+opt_einsum = "*"
+packaging = "*"
+azureml-mlflow = "*"
+# Optional CUDA dependencies - install manually if CUDA is available
+# xformers = {version = "*", optional = true}
+# flash-attn = {version = "*", optional = true}  
+# causal-conv1d = {version = "*", optional = true}
+# mamba-ssm = {version = "*", optional = true}
+lm-eval = "*"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+pytest-cov = "^4.1.0"
+pytest-mock = "^3.11.0"
+pytest-xdist = "^3.3.0"
+black = "^23.7.0"
+isort = "^5.12.0"
+flake8 = "^6.1.0"
+mypy = "^1.5.0"
+pre-commit = "^3.3.3"
+
+[tool.poetry.scripts]
+test = "pytest:main"
+tests = "pytest:main"
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--cov=lit_gpt",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+    # "--cov-fail-under=80",  # Disabled for initial setup validation
+    "-v",
+    "--tb=short",
+    "--maxfail=1",
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "slow: Slow tests",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["lit_gpt"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/site-packages/*",
+    "*/distutils/*",
+    "*/venv/*",
+    "*/.venv/*",
+]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+fail_under = 80
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
+[tool.isort]
+profile = "black"
+line_length = 120
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+
+[tool.black]
+line-length = 120
+target-version = ['py39', 'py310', 'py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+disallow_untyped_decorators = false
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_optional = true
+ignore_missing_imports = true
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

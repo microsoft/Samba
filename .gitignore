@@ -13,3 +13,53 @@ checkpoints
 out
 wandb
 amlt
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+*.pyc
+.tox/
+.mypy_cache/
+.hypothesis/
+
+# Claude
+.claude/*
+
+# Build artifacts
+dist/
+*.egg-info/
+.eggs/
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Virtual environments
+venv/
+env/
+ENV/
+.Python
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
