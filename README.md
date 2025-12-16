@@ -37,7 +37,7 @@ We report 5-shot accuracy for MMLU, 8-shot CoT accuracy for GSM8K, 0-shot pass@1
 
 
 ## Code Overview
-Our training infrastructure on SlimPajama is a modified version of [TinyLlama](https://github.com/jzhang38/TinyLlama) and [LitGPT](https://github.com/Lightning-AI/litgpt). One can easily specify different architectual configurations through modifying the [`model_name`](pretrain.py#L30) and the [`config file`](lit_gpt/config.py) which includes tons of baseline architectures mentioned in the paper. Our RetNet and GLA implementations are from the awesome [Flash Linear Attention](https://github.com/sustcsonglin/flash-linear-attention) repository.
+Our training infrastructure on SlimPajama is a modified version of [TinyLlama](https://github.com/jzhang38/TinyLlama) and [LitGPT](https://github.com/Lightning-AI/litgpt). One can easily specify different architectural configurations through modifying the [`model_name`](pretrain.py#L30) and the [`config file`](lit_gpt/config.py) which includes tons of baseline architectures mentioned in the paper. Our RetNet and GLA implementations are from the awesome [Flash Linear Attention](https://github.com/sustcsonglin/flash-linear-attention) repository.
 
 
 ## Pretraining Samba from scratch
@@ -51,7 +51,7 @@ cd /path/to/dataset
 git lfs install
 git clone https://huggingface.co/datasets/cerebras/SlimPajama-627B
 ```
-The SlimPajama dataset takes 893GB diskspace. Use the provided scripts to tokenize the datasets and divide them into chunks.
+The SlimPajama dataset takes 893GB disk space. Use the provided scripts to tokenize the datasets and divide them into chunks.
 ```bash
 python scripts/prepare_slimpajama.py --source_path /path/to/SlimPajama --tokenizer_path data/llama  --destination_path data/slim --split validation --percentage 1.0
 python scripts/prepare_slimpajama.py --source_path /path/to/SlimPajama --tokenizer_path data/llama  --destination_path data/slim --split train --percentage 1.0
